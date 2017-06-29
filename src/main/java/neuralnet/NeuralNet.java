@@ -71,7 +71,7 @@ public class NeuralNet {
 
             INDArray activation = (i == 0) ? input : layers.get(i - 1).getActivation();
 
-            INDArray weightDelta = errorGradient.mmul(activation.transpose()).mul(learningRate);
+            INDArray weightDelta = errorGradient.transpose().mmul(activation).mul(learningRate);
 
             layer.updateWeights(weightDelta);
             layer.updateBiases(errorGradient);

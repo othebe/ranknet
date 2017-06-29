@@ -8,28 +8,29 @@ import org.nd4j.linalg.factory.Nd4j;
 import java.util.List;
 
 public class Regression {
+    private static int EPOCHS = 10;
+
     public static void main(String[] args) {
         NeuralNet net = NeuralNet.Builder()
-                .setLearningRate(.001)
-                .addLayer(Layer.Builder().setInCount(2).setOutCount(4).setActivationFunction(SigmoidActivationFunction.INSTANCE).build())
-                .addLayer(Layer.Builder().setInCount(4).setOutCount(4).setActivationFunction(SigmoidActivationFunction.INSTANCE).build())
-                .addLayer(Layer.Builder().setInCount(4).setOutCount(1).build())
+                .setLearningRate(.01)
+                .addLayer(Layer.Builder().setInCount(2).setOutCount(2).setActivationFunction(SigmoidActivationFunction.INSTANCE).build())
+                .addLayer(Layer.Builder().setInCount(2).setOutCount(1).setActivationFunction(IdentityActivationFunction.INSTANCE).build())
                 .build();
 
-        INDArray testInput = Nd4j.create(new double[] { 2, 3 }, new int[] { 2, 1 });
+        INDArray testInput = Nd4j.create(new double[] { 2, 3 }, new int[] { 1, 2 });
 
         List<INDArray> outputs = net.feedForward(testInput);
-        System.out.println(outputs);
+        System.out.printf("FeedForward: %s\n\n", outputs.toString());
 
-        List<INDArray> gradients = net.backpropagateError(Nd4j.scalar(2));
-        System.out.println(gradients);
+        List<INDArray> gradients = net.backpropagateError(Nd4j.create(new double[] { 2, 2 }, new int[] { 2, 1 }));
+        System.out.printf("ErrorGradient: %s\n\n", gradients.toString());
 
-        for (int iteration = 0; iteration < 10; iteration++) {
+        for (int epoch = 0; epoch < EPOCHS; epoch++) {
             List<INDArray> activations = net.feedForward(testInput);
             double output = activations.get(activations.size() - 1).getDouble(0);
-            System.out.printf("Iteration %d : %f\n", iteration, output);
+            System.out.printf("Epoch %d : %f\n", epoch, output);
 
-            net.train(testInput, Nd4j.scalar(12));
+            net.train(testInput, Nd4j.create(new double[] { 12 }, new int[] { 1, 1 }));
         }
     }
 }

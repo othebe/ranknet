@@ -2,6 +2,10 @@ package neuralnet.layer;
 
 import neuralnet.activationfunction.IActivationFunction;
 import org.nd4j.linalg.api.ndarray.INDArray;
+import org.nd4j.linalg.factory.Nd4j;
+
+import java.util.LinkedList;
+import java.util.List;
 
 public class Layer {
     private INDArray weights;
@@ -42,19 +46,43 @@ public class Layer {
     }
 
     public INDArray getErrorGradient(INDArray error) {
-        return weights.transpose().mmul(error);
+        return error.mmul(weights);
     }
 
     public void updateWeights(INDArray gradients) {
-        weights = weights.add(gradients);
+        List<INDArray> rows = new LinkedList<INDArray>();
+        int stride = activation.rows() * weights.rows();
+
+        for (int row = 0; row < gradients.rows(); row = row + stride) {
+            int[] extractRows = new int[stride];
+            for (int i = 0; i < stride; i++) {
+                extractRows[i] = (row * stride) + i;
+            }
+            rows.add(gradients.getRows(extractRows));
+        }
+        weights = weights.add(Nd4j.averageAndPropagate(rows));
     }
 
     public void updateBiases(INDArray gradients) {
-        biases = biases.add(gradients);
+        List<INDArray> rows = new LinkedList<INDArray>();
+        int stride = activation.rows();
+
+        for (int row = 0; row < gradients.rows(); row = row + stride) {
+            int[] extractRows = new int[stride];
+            for (int i = 0; i < stride; i++) {
+                extractRows[i] = (row * stride) + i;
+            }
+            rows.add(gradients.getRows(extractRows));
+        }
+        biases = biases.add(Nd4j.averageAndPropagate(rows));
     }
 
     private INDArray calculateZ(INDArray input) {
-        return weights.mmul(input).add(biases);
+        INDArray biasMatrix = biases;
+        for (int i = 1; i < input.rows(); i++) {
+            biasMatrix = Nd4j.hstack(biasMatrix, biases);
+        }
+        return input.mmul(weights.transpose()).add(biasMatrix);
     }
 
     private INDArray calculateActivation(INDArray z) {
