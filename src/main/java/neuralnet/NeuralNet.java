@@ -3,14 +3,18 @@ package neuralnet;
 import neuralnet.layer.Layer;
 import org.nd4j.linalg.api.ndarray.INDArray;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Stack;
 
 public class NeuralNet {
     private List<Layer> layers;
     private double learningRate;
 
-    public static final Builder BUILDER = new Builder();
+    public static Builder Builder() {
+        return new Builder();
+    }
 
     protected void setLayers(List<Layer> layers) {
         this.layers = layers;
@@ -25,7 +29,7 @@ public class NeuralNet {
         activations.add(input);
 
         INDArray layerInput = input;
-        for (int i = 1; i < layers.size(); i++) {
+        for (int i = 0; i < layers.size(); i++) {
             Layer layer = layers.get(i);
             layer.activate(layerInput);
             INDArray output = layer.getActivation();
@@ -38,18 +42,40 @@ public class NeuralNet {
     }
 
     public List<INDArray> backpropagateError(INDArray error) {
+        Stack<INDArray> reverseGradients = new Stack<INDArray>();
         List<INDArray> gradients = new LinkedList<INDArray>();
-        gradients.add(error);
+
+        reverseGradients.push(error);
 
         INDArray delta = error;
-        for (int i = layers.size() - 1; i >= 2; i--) {
+        for (int i = layers.size() - 1; i >= 0; i--) {
             Layer layer = layers.get(i);
 
             delta = layer.getErrorGradient(delta);
-            gradients.add(layers.size() - i - 1, delta);
+            reverseGradients.push(delta);
+        }
+
+        while (!reverseGradients.isEmpty()) {
+            gradients.add(reverseGradients.pop());
         }
 
         return gradients;
+    }
+
+    public void backpropagateAndUpdate(INDArray input, INDArray error) {
+        List<INDArray> errorGradients = backpropagateError(error);
+
+        for (int i = layers.size() - 1; i >=0 ; i--) {
+            Layer layer = layers.get(i);
+            INDArray errorGradient = errorGradients.get(i + 1);
+
+            INDArray activation = (i == 0) ? input : layers.get(i - 1).getActivation();
+
+            INDArray weightDelta = errorGradient.mmul(activation.transpose()).mul(learningRate);
+
+            layer.updateWeights(weightDelta);
+            layer.updateBiases(errorGradient);
+        }
     }
 
     public void train(INDArray data, INDArray expected) {
@@ -60,24 +86,6 @@ public class NeuralNet {
         INDArray activationDerivative = outputLayer.getActivationDerivative();
         INDArray error = expected.sub(output).mul(activationDerivative);
 
-        List<INDArray> errorGradients = backpropagateError(error);
-
-        for (int i = layers.size() - 1; i >=1 ; i--) {
-            Layer layer = layers.get(i);
-            Layer previousLayer = layers.get(i - 1);
-
-            INDArray errorGradient = errorGradients.get(i - 1);
-            INDArray activation = previousLayer.getActivation();
-
-            // Use data as the activation for input layer.
-            if (i == 1) {
-                activation = data;
-            }
-
-            INDArray weightDelta = errorGradient.mmul(activation.transpose()).mul(learningRate);
-
-            layer.updateWeights(weightDelta);
-            layer.updateBiases(errorGradient);
-        }
+        backpropagateAndUpdate(data, error);
     }
 }

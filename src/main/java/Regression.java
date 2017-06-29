@@ -1,4 +1,5 @@
 import neuralnet.NeuralNet;
+import neuralnet.activationfunction.IdentityActivationFunction;
 import neuralnet.activationfunction.SigmoidActivationFunction;
 import neuralnet.layer.Layer;
 import org.nd4j.linalg.api.ndarray.INDArray;
@@ -6,13 +7,13 @@ import org.nd4j.linalg.factory.Nd4j;
 
 import java.util.List;
 
-public class Main {
+public class Regression {
     public static void main(String[] args) {
-        NeuralNet net = NeuralNet.BUILDER
-                .setLearningRate(.01)
-                .addLayer(Layer.Builder().setInCount(2).setOutCount(2).build())
-                .addLayer(Layer.Builder().setInCount(2).setOutCount(2).setActivationFunction(SigmoidActivationFunction.INSTANCE).build())
-                .addLayer(Layer.Builder().setInCount(2).setOutCount(1).build())
+        NeuralNet net = NeuralNet.Builder()
+                .setLearningRate(.001)
+                .addLayer(Layer.Builder().setInCount(2).setOutCount(4).setActivationFunction(SigmoidActivationFunction.INSTANCE).build())
+                .addLayer(Layer.Builder().setInCount(4).setOutCount(4).setActivationFunction(SigmoidActivationFunction.INSTANCE).build())
+                .addLayer(Layer.Builder().setInCount(4).setOutCount(1).build())
                 .build();
 
         INDArray testInput = Nd4j.create(new double[] { 2, 3 }, new int[] { 2, 1 });
