@@ -1,35 +1,39 @@
 import neuralnet.activationfunction.IdentityActivationFunction;
+import neuralnet.activationfunction.SigmoidActivationFunction;
 import neuralnet.layer.Layer;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 import ranknet.Data;
 import ranknet.DataSetGenerator;
+import ranknet.Evaluator;
 import ranknet.NeuralRankNet;
 
 import java.util.List;
 
 public class RankNet {
-    private static final int NUM_FEATURES = 10;
-    private static final int NUM_DATA_SETS = 10;
-    private static final int NUM_DATA_PER_SET = 55;
-    private static final int EPOCHS = 50;
+    private static final int NUM_FEATURES = 50;
+    private static final int NUM_DATA_SETS = 100;
+    private static final int NUM_DATA_PER_SET = 5;
+    private static final int EPOCHS = 500;
 
     public static void main(String[] args) {
         DataSetGenerator generator = new DataSetGenerator(NUM_FEATURES, getIdealWeights());
 
         NeuralRankNet net = NeuralRankNet.Builder()
-                .setLearningRate(.001)
-                .addLayer(Layer.Builder().setInCount(NUM_FEATURES).setOutCount(NUM_FEATURES * 5).setActivationFunction(IdentityActivationFunction.INSTANCE).build())
-                .addLayer(Layer.Builder().setInCount(NUM_FEATURES * 5).setOutCount(1).setActivationFunction(IdentityActivationFunction.INSTANCE).build())
+                .setLearningRate(.1)
+//                .addLayer(Layer.Builder().setInCount(NUM_FEATURES).setOutCount(NUM_FEATURES * 5).setActivationFunction(SigmoidActivationFunction.INSTANCE).build())
+//                .addLayer(Layer.Builder().setInCount(NUM_FEATURES * 5).setOutCount(NUM_FEATURES * 5).setActivationFunction(SigmoidActivationFunction.INSTANCE).build())
+                .addLayer(Layer.Builder().setInCount(NUM_FEATURES).setOutCount(1).setActivationFunction(IdentityActivationFunction.INSTANCE).build())
                 .build();
 
         train(net, generator);
 
-        test(net, generator);
+//        test(net, generator);
     }
 
     private static void train(NeuralRankNet net, DataSetGenerator generator) {
         List<List<Data>> dataSets = generator.generate(NUM_DATA_SETS, NUM_DATA_PER_SET);
+        List<List<Data>> testDataSets = generator.generate(NUM_DATA_SETS, NUM_DATA_PER_SET);
 
         for (int epoch = 0; epoch < EPOCHS; epoch++) {
             for (List<Data> dataSet : dataSets) {
@@ -37,20 +41,17 @@ public class RankNet {
                     net.train(dataSet.get(i).getFeatures(), dataSet.get(i + 1).getFeatures(), Nd4j.scalar(1));
                 }
             }
+            System.out.printf("Epoch %d: ", epoch);
+            Evaluator evaluator = new Evaluator(net);
+            evaluator.evaluate(testDataSets);
         }
     }
 
     private static void test(NeuralRankNet net, DataSetGenerator generator) {
         List<List<Data>> dataSets = generator.generate(NUM_DATA_SETS, NUM_DATA_PER_SET);
 
-        for (List<Data> dataSet : dataSets) {
-            for (Data data : dataSet) {
-                List<INDArray> feedForwardList = net.feedForward(data.getFeatures());
-                double score = feedForwardList.get(feedForwardList.size() - 1).getDouble(0);
-                System.out.printf("%f ", score);
-            }
-            System.out.println();
-        }
+        Evaluator evaluator = new Evaluator(net);
+        evaluator.evaluate(dataSets);
     }
 
     private static INDArray getIdealWeights() {

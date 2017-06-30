@@ -2,7 +2,11 @@ package ranknet;
 
 import com.sun.tools.javac.util.Pair;
 import neuralnet.layer.Layer;
+import org.nd4j.linalg.activations.impl.ActivationIdentity;
 import org.nd4j.linalg.api.ndarray.INDArray;
+import org.nd4j.linalg.factory.Nd4j;
+import org.nd4j.linalg.lossfunctions.ILossFunction;
+import org.nd4j.linalg.lossfunctions.impl.LossMSE;
 import org.nd4j.linalg.ops.transforms.Transforms;
 
 import java.util.LinkedList;
@@ -118,7 +122,11 @@ public class NeuralRankNet {
 
     private static INDArray getOutputCostDerivative(INDArray output, INDArray expected) {
         // Naive MSE.
-        return expected.sub(output);
+         return expected.sub(output);
+
+        // XE
+//        ILossFunction lf = new LossMSE();
+//        return lf.computeGradient(expected, output, new ActivationIdentity(), null);
     }
 
     private Pair<List<INDArray>, List<INDArray>> getActivationZPair(INDArray input) {
