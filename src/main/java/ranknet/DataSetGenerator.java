@@ -1,11 +1,10 @@
 package ranknet;
 
+import com.sun.tools.javac.util.Pair;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 public class DataSetGenerator {
     private int numFeatures;
@@ -27,33 +26,24 @@ public class DataSetGenerator {
     }
 
     private List<Data> generateDataSet(int numData) {
-        INDArray dataRows = null;
-
-        for (int i = 0; i < numData; i++) {
-            INDArray features = Nd4j.rand(numFeatures, 1);
-            INDArray score = idealWeights.mmul(features);
-            INDArray scoredFeatures = Nd4j.vstack(score, features);
-
-            if (dataRows == null) {
-                dataRows = scoredFeatures;
-            } else {
-                dataRows = Nd4j.hstack(dataRows, scoredFeatures);
-            }
-        }
-
-        int[] columns = new int[numData];
-        for (int i = 1; i <= numData; i++) {
-            columns[i - 1] = i;
-        }
-        INDArray sorted =  Nd4j.sortRows(dataRows, 0, false);
-        INDArray sortedFeatures = sorted.getRows(columns);
-
         List<Data> dataSet = new LinkedList<Data>();
+        List<Pair<INDArray, INDArray>> scoredFeaturePairList = new ArrayList<Pair<INDArray, INDArray>>();
+
         for (int i = 0; i < numData; i++) {
-            double computeScore = sorted.getRow(i).getDouble(0);
-            INDArray features = sortedFeatures.getRow(i);
-            Data data = new Data(numData - i, features, computeScore);
-            dataSet.add(data);
+            INDArray features = Nd4j.rand(1, numFeatures);
+            INDArray score = features.mmul(idealWeights.transpose());
+            scoredFeaturePairList.add(new Pair<INDArray, INDArray>(score, features));
+        }
+
+        Collections.sort(scoredFeaturePairList, new Comparator<Pair<INDArray, INDArray>>() {
+            public int compare(Pair<INDArray, INDArray> o1, Pair<INDArray, INDArray> o2) {
+                return Double.compare(o2.fst.getDouble(0), o1.fst.getDouble(0));
+            }
+        });
+
+        for (int i = 0; i < scoredFeaturePairList.size(); i++) {
+            Pair<INDArray, INDArray> scoredFeaturePair = scoredFeaturePairList.get(i);
+            dataSet.add(new Data(numData - i, scoredFeaturePair.snd, scoredFeaturePair.fst.getDouble(0)));
         }
 
         return dataSet;

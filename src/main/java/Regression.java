@@ -22,7 +22,7 @@ public class Regression {
         List<INDArray> outputs = net.feedForward(testInput);
         System.out.printf("FeedForward: %s\n\n", outputs.toString());
 
-        List<INDArray> gradients = net.backpropagateError(Nd4j.create(new double[] { 2, 2 }, new int[] { 2, 1 }));
+        List<INDArray> gradients = net.backpropagateError(Nd4j.create(new double[] { 2 }, new int[] { 1, 1 }));
         System.out.printf("ErrorGradient: %s\n\n", gradients.toString());
 
         for (int epoch = 0; epoch < EPOCHS; epoch++) {

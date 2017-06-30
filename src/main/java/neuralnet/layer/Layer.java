@@ -13,6 +13,7 @@ public class Layer {
     private IActivationFunction activationFunction;
 
     // Iteration instance variables.
+    private INDArray input;
     private INDArray z;
     private INDArray activation;
     private INDArray activationDerivative;
@@ -28,9 +29,14 @@ public class Layer {
     }
 
     public void activate(INDArray input) {
+        this.input = input;
         z = calculateZ(input);
         activation = calculateActivation(z);
-        activationDerivative = getActivationDerivative(z);
+        activationDerivative = calculateActivationDerivative(z);
+    }
+
+    public INDArray getInput() {
+        return input;
     }
 
     public INDArray getZ() {
@@ -45,8 +51,8 @@ public class Layer {
         return activationDerivative;
     }
 
-    public INDArray getErrorGradient(INDArray error) {
-        return error.mmul(weights);
+    public INDArray getErrorGradient(INDArray error, INDArray prevActivationDerivative) {
+        return error.mmul(weights).mul(prevActivationDerivative);
     }
 
     public void updateWeights(INDArray gradients) {
@@ -77,7 +83,7 @@ public class Layer {
         biases = biases.add(Nd4j.averageAndPropagate(rows));
     }
 
-    private INDArray calculateZ(INDArray input) {
+    public INDArray calculateZ(INDArray input) {
         INDArray biasMatrix = biases;
         for (int i = 1; i < input.rows(); i++) {
             biasMatrix = Nd4j.hstack(biasMatrix, biases);
@@ -85,11 +91,11 @@ public class Layer {
         return input.mmul(weights.transpose()).add(biasMatrix);
     }
 
-    private INDArray calculateActivation(INDArray z) {
+    public INDArray calculateActivation(INDArray z) {
         return activationFunction.output(z);
     }
 
-    private INDArray getActivationDerivative(INDArray z) {
+    public INDArray calculateActivationDerivative(INDArray z) {
         return activationFunction.derivative(z);
     }
 }

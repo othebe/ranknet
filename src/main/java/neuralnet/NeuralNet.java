@@ -3,14 +3,13 @@ package neuralnet;
 import neuralnet.layer.Layer;
 import org.nd4j.linalg.api.ndarray.INDArray;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
 
 public class NeuralNet {
-    private List<Layer> layers;
-    private double learningRate;
+    protected List<Layer> layers;
+    protected double learningRate;
 
     public static Builder Builder() {
         return new Builder();
@@ -51,7 +50,9 @@ public class NeuralNet {
         for (int i = layers.size() - 1; i >= 0; i--) {
             Layer layer = layers.get(i);
 
-            delta = layer.getErrorGradient(delta);
+            INDArray prevZ = (i == 0) ? layer.getInput() : layers.get(i - 1).getZ();
+
+            delta = layer.getErrorGradient(delta, layer.calculateActivationDerivative(prevZ));
             reverseGradients.push(delta);
         }
 
@@ -69,7 +70,7 @@ public class NeuralNet {
             Layer layer = layers.get(i);
             INDArray errorGradient = errorGradients.get(i + 1);
 
-            INDArray activation = (i == 0) ? input : layers.get(i - 1).getActivation();
+            INDArray activation = layer.getInput();
 
             INDArray weightDelta = errorGradient.transpose().mmul(activation).mul(learningRate);
 
