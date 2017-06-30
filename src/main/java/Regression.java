@@ -8,16 +8,20 @@ import org.nd4j.linalg.factory.Nd4j;
 import java.util.List;
 
 public class Regression {
-    private static int EPOCHS = 10;
+    private static int FEATURE_COUNT = 20;
+    private static int HIDDEN_NODE_COUNT = 40;
+    private static int EPOCHS = 20;
 
     public static void main(String[] args) {
         NeuralNet net = NeuralNet.Builder()
                 .setLearningRate(.01)
-                .addLayer(Layer.Builder().setInCount(2).setOutCount(2).setActivationFunction(SigmoidActivationFunction.INSTANCE).build())
-                .addLayer(Layer.Builder().setInCount(2).setOutCount(1).setActivationFunction(IdentityActivationFunction.INSTANCE).build())
+                .addLayer(Layer.Builder().setInCount(FEATURE_COUNT).setOutCount(HIDDEN_NODE_COUNT).setActivationFunction(SigmoidActivationFunction.INSTANCE).build())
+                .addLayer(Layer.Builder().setInCount(HIDDEN_NODE_COUNT).setOutCount(HIDDEN_NODE_COUNT).setActivationFunction(SigmoidActivationFunction.INSTANCE).build())
+                .addLayer(Layer.Builder().setInCount(HIDDEN_NODE_COUNT).setOutCount(HIDDEN_NODE_COUNT).setActivationFunction(SigmoidActivationFunction.INSTANCE).build())
+                .addLayer(Layer.Builder().setInCount(HIDDEN_NODE_COUNT).setOutCount(1).setActivationFunction(IdentityActivationFunction.INSTANCE).build())
                 .build();
 
-        INDArray testInput = Nd4j.create(new double[] { 2, 3 }, new int[] { 1, 2 });
+        INDArray testInput = Nd4j.rand(1, FEATURE_COUNT);
 
         List<INDArray> outputs = net.feedForward(testInput);
         System.out.printf("FeedForward: %s\n\n", outputs.toString());

@@ -11,19 +11,20 @@ import ranknet.NeuralRankNet;
 import java.util.List;
 
 public class RankNet {
-    private static final int NUM_FEATURES = 50;
-    private static final int NUM_DATA_SETS = 100;
-    private static final int NUM_DATA_PER_SET = 5;
-    private static final int EPOCHS = 500;
+    private static final int NUM_FEATURES = 32;
+    private static final int HIDDEN_NODES = NUM_FEATURES * 2;
+    private static final int NUM_DATA_SETS = 50;
+    private static final int NUM_DATA_PER_SET = 20;
+    private static final int EPOCHS = 20;
 
     public static void main(String[] args) {
         DataSetGenerator generator = new DataSetGenerator(NUM_FEATURES, getIdealWeights());
 
         NeuralRankNet net = NeuralRankNet.Builder()
                 .setLearningRate(.1)
-//                .addLayer(Layer.Builder().setInCount(NUM_FEATURES).setOutCount(NUM_FEATURES * 5).setActivationFunction(SigmoidActivationFunction.INSTANCE).build())
-//                .addLayer(Layer.Builder().setInCount(NUM_FEATURES * 5).setOutCount(NUM_FEATURES * 5).setActivationFunction(SigmoidActivationFunction.INSTANCE).build())
-                .addLayer(Layer.Builder().setInCount(NUM_FEATURES).setOutCount(1).setActivationFunction(IdentityActivationFunction.INSTANCE).build())
+                .addLayer(Layer.Builder().setInCount(NUM_FEATURES).setOutCount(HIDDEN_NODES).setActivationFunction(SigmoidActivationFunction.INSTANCE).build())
+                .addLayer(Layer.Builder().setInCount(HIDDEN_NODES).setOutCount(HIDDEN_NODES).setActivationFunction(SigmoidActivationFunction.INSTANCE).build())
+                .addLayer(Layer.Builder().setInCount(HIDDEN_NODES).setOutCount(1).setActivationFunction(IdentityActivationFunction.INSTANCE).build())
                 .build();
 
         train(net, generator);
@@ -39,6 +40,10 @@ public class RankNet {
             for (List<Data> dataSet : dataSets) {
                 for (int i = 0; i < dataSet.size() - 1; i++) {
                     net.train(dataSet.get(i).getFeatures(), dataSet.get(i + 1).getFeatures(), Nd4j.scalar(1));
+
+//                    System.out.printf("Epoch %d: ", epoch);
+//                    Evaluator evaluator = new Evaluator(net);
+//                    evaluator.evaluate(testDataSets);
                 }
             }
             System.out.printf("Epoch %d: ", epoch);

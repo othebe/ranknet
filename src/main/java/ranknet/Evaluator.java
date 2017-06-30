@@ -20,13 +20,19 @@ public class Evaluator {
             Iterator<Data> dataIterator = dataSet.iterator();
             double prevScore = getScore(dataIterator.next());
 
+//            System.out.printf("%f ", prevScore);
+
             while (dataIterator.hasNext()) {
                 double currScore = getScore(dataIterator.next());
                 if (currScore > prevScore) {
                     mismatchedCount++;
                 }
                 dataCount++;
+
+//                System.out.printf("%f ", currScore);
             }
+
+//            System.out.println();
         }
 
         System.out.printf("Mismatch/Total = %d/%d [%f]\n", mismatchedCount, dataCount, mismatchedCount * 1.0f / dataCount);

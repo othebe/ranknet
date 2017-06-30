@@ -2,11 +2,7 @@ package ranknet;
 
 import com.sun.tools.javac.util.Pair;
 import neuralnet.layer.Layer;
-import org.nd4j.linalg.activations.impl.ActivationIdentity;
 import org.nd4j.linalg.api.ndarray.INDArray;
-import org.nd4j.linalg.factory.Nd4j;
-import org.nd4j.linalg.lossfunctions.ILossFunction;
-import org.nd4j.linalg.lossfunctions.impl.LossMSE;
 import org.nd4j.linalg.ops.transforms.Transforms;
 
 import java.util.LinkedList;
@@ -79,9 +75,11 @@ public class NeuralRankNet {
         INDArray errorGradient = outputErrorGradient;
         reverseGradients.add(errorGradient);
 
-        for (int i = layers.size() - 1; i >= 0; i--) {
+        for (int i = layers.size() - 2; i >= 0; i--) {
             Layer layer = layers.get(i);
-            errorGradient = layer.getErrorGradient(errorGradient, zs.get(zs.size() - 1 - i));
+            Layer forwardLayer = layers.get(i + 1);
+            INDArray prevActivationDerivative = layer.calculateActivationDerivative(zs.get(i + 1));
+            errorGradient = forwardLayer.getErrorGradient(errorGradient, prevActivationDerivative);
             reverseGradients.add(errorGradient);
         }
 
@@ -102,8 +100,8 @@ public class NeuralRankNet {
 
         for (int i = layers.size() - 1; i >= 0; i--) {
             Layer layer = layers.get(i);
-            INDArray errorGradientI = errorGradientsI.get(i + 1);
-            INDArray errorGradientJ = errorGradientsJ.get(i + 1);
+            INDArray errorGradientI = errorGradientsI.get(i);
+            INDArray errorGradientJ = errorGradientsJ.get(i);
 
             INDArray activationI = activationsI.get(i);
             INDArray activationJ = activationsJ.get(i);

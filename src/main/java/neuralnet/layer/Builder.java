@@ -37,7 +37,7 @@ public class Builder {
     }
 
     public Layer build() {
-        INDArray weights = Nd4j.rand(outCount, inCount);
+        INDArray weights = Nd4j.rand(outCount, inCount).div(inCount);
         INDArray biases = Nd4j.create(1, outCount);
 
         Layer layer = new Layer(weights, biases, activationFunction);
