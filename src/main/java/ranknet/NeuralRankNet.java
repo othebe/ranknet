@@ -2,7 +2,10 @@ package ranknet;
 
 import com.sun.tools.javac.util.Pair;
 import neuralnet.layer.Layer;
+import org.nd4j.linalg.activations.impl.ActivationIdentity;
 import org.nd4j.linalg.api.ndarray.INDArray;
+import org.nd4j.linalg.lossfunctions.ILossFunction;
+import org.nd4j.linalg.lossfunctions.impl.LossMSE;
 import org.nd4j.linalg.ops.transforms.Transforms;
 
 import java.util.LinkedList;
