@@ -1,7 +1,6 @@
 package ranknet;
 
 import com.sun.tools.javac.util.Pair;
-import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 
 import java.io.File;

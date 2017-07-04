@@ -63,17 +63,18 @@ public class NeuralRankNet {
         INDArray pIJ = getProbability(oIJ);
 
         INDArray deltaC = getOutputCostDerivative(pIJ, expected);
-        INDArray outputErrorGradient = deltaC.mul(outputLayer.getActivationDerivative());
+        INDArray outputErrorGradientI = deltaC.mul(outputLayer.calculateActivationDerivative(oI));
+        INDArray outputErrorGradientJ = deltaC.mul(outputLayer.calculateActivationDerivative(oJ));
 
-        List<INDArray> errorGradientsI = backpropagateError(outputErrorGradient, zI);
-        List<INDArray> errorGradientsJ = backpropagateError(outputErrorGradient, zJ);
+        List<INDArray> errorGradientsI = backpropagateError(outputErrorGradientI, activationsI);
+        List<INDArray> errorGradientsJ = backpropagateError(outputErrorGradientJ, activationsJ);
 
         updateParams(
                 new Pair<List<INDArray>, List<INDArray>>(errorGradientsI, errorGradientsJ),
                 new Pair<List<INDArray>, List<INDArray>>(activationsI, activationsJ));
     }
 
-    private List<INDArray> backpropagateError(INDArray outputErrorGradient, List<INDArray> zs) {
+    private List<INDArray> backpropagateError(INDArray outputErrorGradient, List<INDArray> activations) {
         Stack<INDArray> reverseGradients = new Stack<INDArray>();
         INDArray errorGradient = outputErrorGradient;
         reverseGradients.add(errorGradient);
@@ -81,8 +82,8 @@ public class NeuralRankNet {
         for (int i = layers.size() - 2; i >= 0; i--) {
             Layer layer = layers.get(i);
             Layer forwardLayer = layers.get(i + 1);
-            INDArray prevActivationDerivative = layer.calculateActivationDerivative(zs.get(i + 1));
-            errorGradient = forwardLayer.getErrorGradient(errorGradient, prevActivationDerivative);
+            INDArray activationDerivative = layer.calculateActivationDerivative(activations.get(i + 1));
+            errorGradient = forwardLayer.getErrorGradient(errorGradient, activationDerivative);
             reverseGradients.add(errorGradient);
         }
 
@@ -123,11 +124,11 @@ public class NeuralRankNet {
 
     private static INDArray getOutputCostDerivative(INDArray output, INDArray expected) {
         // Naive MSE.
-         return expected.sub(output);
+        // return expected.sub(output);
 
         // XE
-//        ILossFunction lf = new LossMSE();
-//        return lf.computeGradient(expected, output, new ActivationIdentity(), null);
+        ILossFunction lf = new LossMSE();
+        return lf.computeGradient(expected, output, new ActivationIdentity(), null);
     }
 
     private Pair<List<INDArray>, List<INDArray>> getActivationZPair(INDArray input) {
